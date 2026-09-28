@@ -1,7 +1,6 @@
 const API_URL = 'http://127.0.0.1:8000';
 const token = localStorage.getItem('quadralivre_token');
 
-// PROTEÇÃO DE ROTA: Volta pro login se não tiver token
 if (!token) {
     window.location.href = 'index.html';
 }
@@ -17,7 +16,6 @@ const listaOcupados = document.getElementById('lista-horarios-ocupados');
 
 let agendamentosDaQuadraSelecionada = [];
 
-// --- UTILITÁRIOS ---
 function mostrarStatus(mensagem, tipo) {
     divStatus.textContent = mensagem;
     divStatus.className = ''; 
@@ -29,13 +27,11 @@ function limparStatus() {
     divStatus.className = 'escondido';
 }
 
-// --- LOGOUT ---
 btnSair.addEventListener('click', () => {
     localStorage.removeItem('quadralivre_token');
     window.location.href = 'index.html';
 });
 
-// --- CARREGAR QUADRAS DA API ---
 async function carregarQuadras() {
     try {
         const resposta = await fetch(`${API_URL}/quadras/`);
@@ -57,13 +53,24 @@ function renderizarQuadras(quadras) {
         return;
     }
     
-    listaQuadrasDiv.innerHTML = '';
+    listaQuadrasDiv.innerHTML = '<div class="grid-quadras"></div>';
+    const gridDiv = listaQuadrasDiv.querySelector('.grid-quadras');
+
     quadras.forEach(q => {
-        const p = document.createElement('p');
-        p.textContent = `ID ${q.id} - ${q.nome} (${q.tipo}) | Local: ${q.localizacao}`;
-        p.style.borderBottom = '1px solid var(--border-color)';
-        p.style.padding = '0.5rem 0';
-        listaQuadrasDiv.appendChild(p);
+        const card = document.createElement('div');
+        card.className = 'card-quadra';
+        
+        const imgUrl = q.imagem_url ? q.imagem_url : 'https://via.placeholder.com/400x200.png?text=Imagem+Indisponivel';
+
+        card.innerHTML = `
+            <img src="\({imgUrl}" alt="Foto do espaço:\){q.nome}">
+            <div class="info-quadra">
+                <h3>${q.nome}</h3>
+                <p><strong>Modalidade:</strong> ${q.tipo}</p>
+                <p><strong>Local:</strong> ${q.localizacao}</p>
+            </div>
+        `;
+        gridDiv.appendChild(card);
     });
 }
 
@@ -72,12 +79,11 @@ function popularSelect(quadras) {
     quadras.forEach(q => {
         const option = document.createElement('option');
         option.value = q.id;
-        option.textContent = `${q.nome} (${q.tipo})`;
+        option.textContent = `\({q.nome} (\){q.tipo})`;
         selectQuadra.appendChild(option);
     });
 }
 
-// --- LÓGICA DE HORÁRIOS OCUPADOS ---
 selectQuadra.addEventListener('change', async (e) => {
     const quadraId = e.target.value;
     if (!quadraId) {
@@ -87,7 +93,7 @@ selectQuadra.addEventListener('change', async (e) => {
     }
 
     try {
-        const resposta = await fetch(`${API_URL}/quadras/${quadraId}/agendamentos/`);
+        const resposta = await fetch(`\({API_URL}/quadras/\){quadraId}/agendamentos/`);
         if (resposta.ok) {
             agendamentosDaQuadraSelecionada = await resposta.json();
             atualizarListaOcupados();
@@ -108,7 +114,6 @@ function atualizarListaOcupados() {
         return;
     }
 
-    // Filtra os agendamentos da quadra que caem na data selecionada
     const ocupadosNoDia = agendamentosDaQuadraSelecionada.filter(ag => ag.data_hora_inicio.startsWith(dataSelecionada));
 
     if (ocupadosNoDia.length === 0) {
@@ -120,7 +125,7 @@ function atualizarListaOcupados() {
             const horaFim = ag.data_hora_fim.split('T')[1].substring(0, 5);
             
             const li = document.createElement('li');
-            li.textContent = `Das ${horaInicio} às ${horaFim}`;
+            li.textContent = `Das \({horaInicio} às\){horaFim}`;
             li.style.marginBottom = '0.3rem';
             listaOcupados.appendChild(li);
         });
@@ -128,7 +133,6 @@ function atualizarListaOcupados() {
     containerOcupados.classList.remove('escondido');
 }
 
-// --- ENVIAR AGENDAMENTO (COM VALIDAÇÃO BLINDADA) ---
 formAgendamento.addEventListener('submit', async (e) => {
     e.preventDefault();
     limparStatus();
@@ -138,14 +142,12 @@ formAgendamento.addEventListener('submit', async (e) => {
     const hora_inicio = document.getElementById('hora-inicio').value;
     const hora_fim = document.getElementById('hora-fim').value;
 
-    const data_hora_inicio = `${data}T${hora_inicio}:00`;
-    const data_hora_fim = `${data}T${hora_fim}:00`;
+    const data_hora_inicio = `\({data}T\){hora_inicio}:00`;
+    const data_hora_fim = `\({data}T\){hora_fim}:00`;
 
-    // Converte as strings de hora para objetos Date para calcular a diferença real
     const objInicio = new Date(data_hora_inicio);
     const objFim = new Date(data_hora_fim);
     
-    // Calcula a diferença em minutos
     const diffMinutos = (objFim - objInicio) / (1000 * 60);
 
     if (diffMinutos <= 0) {
@@ -181,8 +183,6 @@ formAgendamento.addEventListener('submit', async (e) => {
             mostrarStatus('Agendamento realizado com sucesso!', 'sucesso');
             formAgendamento.reset();
             containerOcupados.classList.add('escondido');
-            
-            // Força a atualização silenciosa da lista de horários ocupados simulando a troca de quadra
             selectQuadra.dispatchEvent(new Event('change'));
         } else {
             const erroData = await resposta.json();

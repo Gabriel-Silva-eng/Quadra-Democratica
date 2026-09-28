@@ -1,7 +1,8 @@
+/* --- VARIÁVEIS INSTITUCIONAIS (Padrão Governo) --- */
 :root {
-    --bg-color: #f4f6f8; /* Cinza bem claro */
-    --text-color: #333333; /* Texto escuro para leitura */
-    --primary-color: #004a94; /* Azul padrão institucional */
+    --bg-color: #f4f6f8;
+    --text-color: #333333;
+    --primary-color: #004a94;
     --primary-hover: #003366;
     --input-bg: #ffffff;
     --border-color: #cccccc;
@@ -15,7 +16,7 @@
 /* --- CLASSE DE ALTO CONTRASTE (Ativada via JS) --- */
 body.alto-contraste {
     --bg-color: #000000;
-    --text-color: #ffff00; /* Amarelo padrão para deficiência visual */
+    --text-color: #ffff00;
     --primary-color: #ffff00;
     --primary-hover: #ffffff;
     --input-bg: #000000;
@@ -29,7 +30,7 @@ body.alto-contraste {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif; /* Fonte padrão e universal */
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 body {
@@ -82,8 +83,8 @@ body {
 .container {
     background-color: var(--input-bg);
     padding: 2.5rem;
-    border: 1px solid var(--border-color); /* Borda dura em vez de sombra borrada */
-    border-radius: 2px; /* Cantos quase retos */
+    border: 1px solid var(--border-color);
+    border-radius: 2px;
     width: 100%;
     max-width: 500px;
     margin-top: 2rem;
@@ -153,7 +154,7 @@ input:focus, select:focus {
     width: 100%;
     padding: 1rem;
     background-color: var(--primary-color);
-    color: #ffffff; /* Força o texto do botão a ser sempre branco */
+    color: #ffffff;
     border: 2px solid var(--primary-color);
     border-radius: 2px;
     font-size: 1.1rem;
@@ -209,4 +210,47 @@ body.alto-contraste .msg-erro, body.alto-contraste .msg-sucesso {
     background-color: #000000;
     color: #ffff00;
     border-color: #ffff00;
-}'
+}
+
+/* --- GRID DE QUADRAS COM IMAGEM (NOVO) --- */
+.grid-quadras {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.card-quadra {
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-quadra img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-quadra .info-quadra {
+    padding: 1rem;
+}
+
+.card-quadra h3 {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.card-quadra p {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+body.alto-contraste .card-quadra img {
+    filter: grayscale(100%) contrast(120%);
+}

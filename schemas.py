@@ -1,11 +1,10 @@
-from pydantic import BaseModel, EmailStr
-from datetime import datetime
 from typing import List, Optional
+from pydantic import BaseModel
+from datetime import datetime
 
-# --- USUÁRIOS ---
 class UsuarioBase(BaseModel):
     nome: str
-    email: EmailStr
+    email: str
 
 class UsuarioCreate(UsuarioBase):
     senha: str
@@ -15,11 +14,11 @@ class UsuarioResponse(UsuarioBase):
     class Config:
         from_attributes = True
 
-# --- QUADRAS ---
 class QuadraBase(BaseModel):
     nome: str
-    tipo: str
     localizacao: str
+    tipo: str
+    imagem_url: Optional[str] = None # <-- Campo opcional na API
 
 class QuadraCreate(QuadraBase):
     pass
@@ -29,17 +28,16 @@ class QuadraResponse(QuadraBase):
     class Config:
         from_attributes = True
 
-# --- AGENDAMENTOS ---
-class AgendamentoCreate(BaseModel):
+class AgendamentoBase(BaseModel):
     quadra_id: int
     data_hora_inicio: datetime
     data_hora_fim: datetime
 
-class AgendamentoResponse(BaseModel):
+class AgendamentoCreate(AgendamentoBase):
+    pass
+
+class AgendamentoResponse(AgendamentoBase):
     id: int
-    quadra_id: int
     usuario_id: int
-    data_hora_inicio: datetime
-    data_hora_fim: datetime
     class Config:
         from_attributes = True

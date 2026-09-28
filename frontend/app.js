@@ -95,7 +95,7 @@ formLogin.addEventListener('submit', async (e) => {
             localStorage.setItem('quadralivre_token', dados.access_token);
             mostrarStatus('Login efetuado! Redirecionando...', 'sucesso');
             
-             // Redireciona para a página principal após 1.5 segundos
+             // Redireciona para a página principal
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
             }, 1500);
