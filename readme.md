@@ -1,4 +1,4 @@
-# 🏀 QuadraLivre
+# 🏀 Quadra Democrática
 
 Reserva e gestão de quadras esportivas comunitárias — Projeto Integrador.
 
