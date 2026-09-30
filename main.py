@@ -7,6 +7,7 @@ from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
 from typing import List
+from fastapi import Response, status, HTTPException
 
 import models
 import schemas
@@ -154,3 +155,18 @@ def criar_agendamento(agendamento: schemas.AgendamentoCreate, db: Session = Depe
     db.commit()
     db.refresh(novo_agendamento)
     return novo_agendamento
+
+@app.delete("/quadras/{quadra_id}", status_code=status.HTTP_204_NO_CONTENT)
+def excluir_quadra(quadra_id: int, db: Session = Depends(get_db)):
+    # Procura a quadra pelo ID
+    quadra_query = db.query(models.Quadra).filter(models.Quadra.id == quadra_id)
+    quadra = quadra_query.first()
+    
+    if not quadra:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quadra não encontrada")
+        
+    # Elimina do banco e salva a alteração
+    quadra_query.delete(synchronize_session=False)
+    db.commit()
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -27,7 +27,7 @@ function limparStatus() {
     divStatus.className = 'escondido';
 }
 
-btnSair.addEventListener('click', () => {
+btnSair.addEventListener('click', function() {
     localStorage.removeItem('quadralivre_token');
     window.location.href = 'index.html';
 });
@@ -56,7 +56,7 @@ function renderizarQuadras(quadras) {
     listaQuadrasDiv.innerHTML = '<div class="grid-quadras"></div>';
     const gridDiv = listaQuadrasDiv.querySelector('.grid-quadras');
 
-    quadras.forEach(q => {
+    quadras.forEach(function(q) {
         const card = document.createElement('div');
         card.className = 'card-quadra';
         
@@ -76,7 +76,7 @@ function renderizarQuadras(quadras) {
 
 function popularSelect(quadras) {
     selectQuadra.innerHTML = '<option value="">-- Selecione uma Quadra --</option>';
-    quadras.forEach(q => {
+    quadras.forEach(function(q) {
         const option = document.createElement('option');
         option.value = q.id;
         option.textContent = q.nome + ' (' + q.tipo + ')';
@@ -84,7 +84,7 @@ function popularSelect(quadras) {
     });
 }
 
-selectQuadra.addEventListener('change', async (e) => {
+selectQuadra.addEventListener('change', async function(e) {
     const quadraId = e.target.value;
     if (!quadraId) {
         agendamentosDaQuadraSelecionada = [];
@@ -99,7 +99,7 @@ selectQuadra.addEventListener('change', async (e) => {
             atualizarListaOcupados();
         }
     } catch (error) {
-        console.error("Erro ao buscar agendamentos", error);
+        console.error('Erro ao buscar agendamentos', error);
     }
 });
 
@@ -114,13 +114,15 @@ function atualizarListaOcupados() {
         return;
     }
 
-    const ocupadosNoDia = agendamentosDaQuadraSelecionada.filter(ag => ag.data_hora_inicio.startsWith(dataSelecionada));
+    const ocupadosNoDia = agendamentosDaQuadraSelecionada.filter(function(ag) {
+        return ag.data_hora_inicio.startsWith(dataSelecionada);
+    });
 
     if (ocupadosNoDia.length === 0) {
         listaOcupados.innerHTML = '<li style="color: var(--primary-color);">Nenhum horário ocupado. Quadra totalmente livre!</li>';
     } else {
         listaOcupados.innerHTML = '';
-        ocupadosNoDia.forEach(ag => {
+        ocupadosNoDia.forEach(function(ag) {
             const horaInicio = ag.data_hora_inicio.split('T')[1].substring(0, 5);
             const horaFim = ag.data_hora_fim.split('T')[1].substring(0, 5);
             
@@ -133,7 +135,23 @@ function atualizarListaOcupados() {
     containerOcupados.classList.remove('escondido');
 }
 
-formAgendamento.addEventListener('submit', async (e) => {
+function gerarComprovante(quadra, data, inicio, fim) {
+    const dataFormatada = data.split('-').reverse().join('/'); 
+
+    divStatus.innerHTML = 
+        '<div style="border: 2px dashed #0056b3; padding: 20px; margin-top: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">' +
+            '<h2 style="color: #0056b3; margin-bottom: 15px;">🎟️ Ticket de Reserva</h2>' +
+            '<p><strong>Espaço:</strong> ' + quadra + '</p>' +
+            '<p><strong>Data:</strong> ' + dataFormatada + '</p>' +
+            '<p><strong>Horário:</strong> ' + inicio + ' às ' + fim + '</p>' +
+            '<p style="font-size: 0.9em; color: #555; margin-top: 15px;">Tire um print ou imprima este comprovante para apresentar no local.</p>' +
+            '<button onclick="window.print()" style="margin-top: 10px; padding: 8px 16px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer;">🖨️ Imprimir</button>' +
+        '</div>';
+        
+    divStatus.className = ''; 
+}
+
+formAgendamento.addEventListener('submit', async function(e) {
     e.preventDefault();
     limparStatus();
 
@@ -180,10 +198,13 @@ formAgendamento.addEventListener('submit', async (e) => {
         });
 
         if (resposta.ok) {
-            mostrarStatus('Agendamento realizado com sucesso!', 'sucesso');
+            const nomeQuadra = selectQuadra.options[selectQuadra.selectedIndex].text;
+            
             formAgendamento.reset();
             containerOcupados.classList.add('escondido');
             selectQuadra.dispatchEvent(new Event('change'));
+            
+            gerarComprovante(nomeQuadra, data, hora_inicio, hora_fim);
         } else {
             const erroData = await resposta.json();
             mostrarStatus(erroData.detail || 'Erro ao agendar.', 'erro');
