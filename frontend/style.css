@@ -1,4 +1,3 @@
-/* --- VARIÁVEIS INSTITUCIONAIS (Padrão Governo) --- */
 :root {
     --bg-color: #f4f6f8;
     --text-color: #333333;
@@ -13,7 +12,6 @@
     --barra-text: #ffffff;
 }
 
-/* --- CLASSE DE ALTO CONTRASTE (Ativada via JS) --- */
 body.alto-contraste {
     --bg-color: #000000;
     --text-color: #ffff00;
@@ -25,7 +23,6 @@ body.alto-contraste {
     --barra-text: #ffff00;
 }
 
-/* --- RESET BÁSICO --- */
 * {
     margin: 0;
     padding: 0;
@@ -253,4 +250,27 @@ body.alto-contraste .msg-erro, body.alto-contraste .msg-sucesso {
 
 body.alto-contraste .card-quadra img {
     filter: grayscale(100%) contrast(120%);
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    #mensagem-status, #mensagem-status * {
+        visibility: visible;
+    }
+    
+    #mensagem-status {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+    }
+
+    #mensagem-status button {
+        display: none !important;
+    }
 }
