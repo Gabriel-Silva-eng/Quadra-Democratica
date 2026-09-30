@@ -14,14 +14,13 @@ Conectar moradores a quadras públicas e comunitárias, evitando conflito de hor
 - [Como Rodar Localmente](#como-rodar-localmente)
 - [API e Rotas](#api-e-rotas)
 - [Requisitos do PI](#requisitos-do-pi)
-- [Próximos Passos](#próximos-passos)
 - [Licença](#licença)
 
 ---
 
 ## Sobre
 
-QuadraLivre é um sistema web pensado para facilitar a reserva e gestão de quadras. O diferencial deste protótipo é a aplicação de boas práticas de segurança desde a base, utilizando hashing irreversível de senhas e autenticação via tokens JWT (JSON Web Tokens).
+Quadra Democrática é um sistema web pensado para facilitar a reserva e gestão de quadras. O diferencial deste protótipo é a aplicação de boas práticas de segurança desde a base, utilizando hashing irreversível de senhas e autenticação via tokens JWT (JSON Web Tokens).
 
 Este repositório contém um back-end construído em Python (FastAPI) e um front-end leve feito puramente em HTML, CSS e JavaScript (Vanilla), sem dependência de frameworks pesados, garantindo alta performance e controle total sobre a acessibilidade.
 
@@ -75,7 +74,7 @@ uvicorn main:app --reload
 
 **2) Front-end (Porta 5500)**
 
-Em um novo terminal, navegue até a pasta do front-end e suba um servidor estático local para evitar bloqueios de CORS:
+Em um novo terminal, navegue até a pasta do front-end e suba um servidor local:
 
 ```bash
 cd frontend
@@ -114,14 +113,6 @@ A API foi documentada automaticamente pelo FastAPI. Abaixo os principais endpoin
 | **Segurança (Extra)**| Proteção contra SQL Injection (ORM), senhas criptografadas e rotas blindadas com JWT. |
 | **Nuvem** | *Próximo passo:* Deploy do back-end (Render) e front-end (GitHub Pages/Vercel). |
 | **Testes** | *Próximo passo:* Implementação de suíte de testes com `pytest`. |
-
----
-
-## Próximos Passos
-
-1. **Deploy em Nuvem:** Hospedar a aplicação para acesso público (Render / Vercel).
-2. **Testes Automatizados:** Desenvolver scripts de teste (Red Team approach) para tentar quebrar a validação de horários usando `pytest`.
-3. **Melhorias de Usabilidade:** Relatórios visuais de ocupação e painel de administração.
 
 ---
 
