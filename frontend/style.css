@@ -252,24 +252,26 @@ body.alto-contraste .card-quadra img {
     filter: grayscale(100%) contrast(120%);
 }
 
+/* ========================================== */
+/* CONFIGURAÇÕES DE IMPRESSÃO (TICKET)        */
+/* ========================================== */
 @media print {
-    body * {
-        visibility: hidden;
+    /* Esconde explicitamente o conteúdo do site sem usar seletores complexos */
+    .barra-acessibilidade,
+    .container {
+        display: none !important;
     }
     
-    #mensagem-status, #mensagem-status * {
-        visibility: visible;
-    }
-    
+    /* Garante que o ticket ocupa a folha A4 e remove margens da web */
     #mensagem-status {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 20px;
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
     }
 
+    /* Oculta o botão de imprimir no papel (não gasta tinta à toa) */
     #mensagem-status button {
         display: none !important;
     }

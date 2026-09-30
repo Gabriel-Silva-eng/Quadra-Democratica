@@ -17,7 +17,7 @@ from database import engine, SessionLocal
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="API QuadraLivre",
+    title="API Quadra Democrática",
     description="Backend seguro para agendamento de quadras públicas.",
     version="1.0.0"
 )

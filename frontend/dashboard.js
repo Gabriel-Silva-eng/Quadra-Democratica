@@ -139,7 +139,7 @@ function gerarComprovante(quadra, data, inicio, fim) {
     const dataFormatada = data.split('-').reverse().join('/'); 
 
     divStatus.innerHTML = 
-        '<div style="border: 2px dashed #0056b3; padding: 20px; margin-top: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">' +
+        '<div style="border: 2px dashed #0056b3; padding: 20px; margin-top: 40px; margin-bottom: 40px; background: #f8f9fa; border-radius: 8px; text-align: center;">' +
             '<h2 style="color: #0056b3; margin-bottom: 15px;">🎟️ Ticket de Reserva</h2>' +
             '<p><strong>Espaço:</strong> ' + quadra + '</p>' +
             '<p><strong>Data:</strong> ' + dataFormatada + '</p>' +
@@ -149,6 +149,12 @@ function gerarComprovante(quadra, data, inicio, fim) {
         '</div>';
         
     divStatus.className = ''; 
+    
+    // Move o ticket para o final absoluto da página (filho direto do body)
+    document.body.appendChild(divStatus);
+    
+    // Rola a página automaticamente para o fundo para o cidadão ver o ticket
+    window.scrollTo(0, document.body.scrollHeight);
 }
 
 formAgendamento.addEventListener('submit', async function(e) {
