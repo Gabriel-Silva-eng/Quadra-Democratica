@@ -34,7 +34,7 @@ btnSair.addEventListener('click', () => {
 
 async function carregarQuadras() {
     try {
-        const resposta = await fetch(`${API_URL}/quadras/`);
+        const resposta = await fetch(API_URL + '/quadras/');
         if (resposta.ok) {
             const quadras = await resposta.json();
             renderizarQuadras(quadras);
@@ -62,14 +62,14 @@ function renderizarQuadras(quadras) {
         
         const imgUrl = q.imagem_url ? q.imagem_url : 'https://via.placeholder.com/400x200.png?text=Imagem+Indisponivel';
 
-        card.innerHTML = `
-            <img src="\({imgUrl}" alt="Foto do espaço:\){q.nome}">
-            <div class="info-quadra">
-                <h3>${q.nome}</h3>
-                <p><strong>Modalidade:</strong> ${q.tipo}</p>
-                <p><strong>Local:</strong> ${q.localizacao}</p>
-            </div>
-        `;
+        card.innerHTML = 
+            '<img src="' + imgUrl + '" alt="Foto do espaço: ' + q.nome + '">' +
+            '<div class="info-quadra">' +
+                '<h3>' + q.nome + '</h3>' +
+                '<p><strong>Modalidade:</strong> ' + q.tipo + '</p>' +
+                '<p><strong>Local:</strong> ' + q.localizacao + '</p>' +
+            '</div>';
+            
         gridDiv.appendChild(card);
     });
 }
@@ -79,7 +79,7 @@ function popularSelect(quadras) {
     quadras.forEach(q => {
         const option = document.createElement('option');
         option.value = q.id;
-        option.textContent = `\({q.nome} (\){q.tipo})`;
+        option.textContent = q.nome + ' (' + q.tipo + ')';
         selectQuadra.appendChild(option);
     });
 }
@@ -93,7 +93,7 @@ selectQuadra.addEventListener('change', async (e) => {
     }
 
     try {
-        const resposta = await fetch(`\({API_URL}/quadras/\){quadraId}/agendamentos/`);
+        const resposta = await fetch(API_URL + '/quadras/' + quadraId + '/agendamentos/');
         if (resposta.ok) {
             agendamentosDaQuadraSelecionada = await resposta.json();
             atualizarListaOcupados();
@@ -125,7 +125,7 @@ function atualizarListaOcupados() {
             const horaFim = ag.data_hora_fim.split('T')[1].substring(0, 5);
             
             const li = document.createElement('li');
-            li.textContent = `Das \({horaInicio} às\){horaFim}`;
+            li.textContent = 'Das ' + horaInicio + ' às ' + horaFim;
             li.style.marginBottom = '0.3rem';
             listaOcupados.appendChild(li);
         });
@@ -142,8 +142,8 @@ formAgendamento.addEventListener('submit', async (e) => {
     const hora_inicio = document.getElementById('hora-inicio').value;
     const hora_fim = document.getElementById('hora-fim').value;
 
-    const data_hora_inicio = `\({data}T\){hora_inicio}:00`;
-    const data_hora_fim = `\({data}T\){hora_fim}:00`;
+    const data_hora_inicio = data + 'T' + hora_inicio + ':00';
+    const data_hora_fim = data + 'T' + hora_fim + ':00';
 
     const objInicio = new Date(data_hora_inicio);
     const objFim = new Date(data_hora_fim);
@@ -166,11 +166,11 @@ formAgendamento.addEventListener('submit', async (e) => {
     }
 
     try {
-        const resposta = await fetch(`${API_URL}/agendamentos/`, {
+        const resposta = await fetch(API_URL + '/agendamentos/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': 'Bearer ' + token 
             },
             body: JSON.stringify({
                 quadra_id: parseInt(quadra_id),
