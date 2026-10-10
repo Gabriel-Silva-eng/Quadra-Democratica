@@ -40,6 +40,25 @@ class AppTests(unittest.TestCase):
         for path in ['/index.html', '/dashboard.html', '/assets/style.css', '/assets/app.js', '/assets/dashboard.js']:
             self.assertEqual(self.client.get(path).status_code, 200)
 
+    def test_catalog_import_is_once_and_preserves_edits(self):
+        from catalogo import importar_catalogo
+        from sqlalchemy.orm import Session
+        importar_catalogo(engine)
+        response = self.client.get('/quadras/').json()
+        self.assertEqual(len(response), 9)
+        self.assertEqual(sum(bool(q['imagem_url']) for q in response), 5)
+        for court in response:
+            if court['imagem_url']:
+                self.assertEqual(self.client.get(court['imagem_url']).status_code, 200)
+        with Session(engine) as db:
+            court = db.get(models.Quadra, response[0]['id'])
+            court.localizacao = 'Endereço atualizado'
+            db.commit()
+        importar_catalogo(engine)
+        updated = self.client.get('/quadras/').json()
+        self.assertEqual(len(updated), 9)
+        self.assertEqual(updated[0]['localizacao'], 'Endereço atualizado')
+
     def test_admin_permissions_and_reservations(self):
         user = self.account('user@example.com')
         admin = self.account('admin@example.com')

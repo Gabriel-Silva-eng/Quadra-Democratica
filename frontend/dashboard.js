@@ -23,8 +23,9 @@ function escaparHTML(value) {
 }
 
 function imagemSegura(value) {
+    if (!value) return '';
     try {
-        const url = new URL(value);
+        const url = new URL(value, API_URL);
         return ['https:', 'http:'].includes(url.protocol) ? escaparHTML(url.href) : '';
     } catch { return ''; }
 }
@@ -76,7 +77,7 @@ function renderizarQuadras(quadras) {
         const imgUrl = imagemSegura(q.imagem_url);
 
         card.innerHTML = 
-            (imgUrl ? '<img src="' + imgUrl + '" alt="Foto do espaço: ' + escaparHTML(q.nome) + '">' : '') +
+            (imgUrl ? '<img loading="lazy" src="' + imgUrl + '" alt="Foto do espaço: ' + escaparHTML(q.nome) + '">' : '<div class="foto-pendente">Foto em breve</div>') +
             '<div class="info-quadra">' +
                 '<h3>' + escaparHTML(q.nome) + '</h3>' +
                 '<p><strong>Modalidade:</strong> ' + escaparHTML(q.tipo) + '</p>' +

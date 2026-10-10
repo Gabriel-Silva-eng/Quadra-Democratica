@@ -276,3 +276,10 @@ body.alto-contraste .card-quadra img {
         display: none !important;
     }
 }
+
+.foto-pendente {
+    min-height: 150px;
+    display: grid;
+    place-items: center;
+    border-bottom: 1px solid var(--border-color);
+}

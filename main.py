@@ -20,6 +20,8 @@ from database import engine, SessionLocal
 
 # Cria as tabelas automaticamente se não existirem
 models.Base.metadata.create_all(bind=engine)
+from catalogo import importar_catalogo
+importar_catalogo(engine)
 
 app = FastAPI(
     title="API Quadra Democrática",
