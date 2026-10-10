@@ -15,7 +15,7 @@ Interface e API são servidas pela mesma aplicação FastAPI.
 
 O banco local não é enviado ao GitHub nem migrado automaticamente.
 O catálogo municipal de `quadras.json` é importado uma única vez no banco,
-incluindo as cinco fotos em `frontend/quadras`. Reinícios não recriam quadras
+incluindo as nove fotos em `frontend/quadras`. Reinícios não recriam quadras
 excluídas nem sobrescrevem alterações posteriores. Modalidades não informadas
 ficam como "A confirmar"; endereços específicos ainda devem ser cadastrados.
 O serviço gratuito pode suspender quando ocioso; o primeiro acesso pode demorar.

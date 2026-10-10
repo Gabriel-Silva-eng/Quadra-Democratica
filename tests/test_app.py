@@ -46,7 +46,7 @@ class AppTests(unittest.TestCase):
         importar_catalogo(engine)
         response = self.client.get('/quadras/').json()
         self.assertEqual(len(response), 9)
-        self.assertEqual(sum(bool(q['imagem_url']) for q in response), 5)
+        self.assertEqual(sum(bool(q['imagem_url']) for q in response), 9)
         for court in response:
             if court['imagem_url']:
                 self.assertEqual(self.client.get(court['imagem_url']).status_code, 200)
@@ -58,6 +58,20 @@ class AppTests(unittest.TestCase):
         updated = self.client.get('/quadras/').json()
         self.assertEqual(len(updated), 9)
         self.assertEqual(updated[0]['localizacao'], 'Endereço atualizado')
+
+    def test_photo_migration_preserves_existing_court(self):
+        from catalogo import importar_catalogo, VERSAO
+        from sqlalchemy.orm import Session
+        with Session(engine) as db:
+            db.add(models.ImportacaoCatalogo(chave=VERSAO))
+            db.add(models.Quadra(id=42, nome='Centro Esportivo Miguel Vieira', localizacao='Endereço existente', tipo='Tipo existente'))
+            db.commit()
+        importar_catalogo(engine)
+        response = self.client.get('/quadras/').json()
+        self.assertEqual(len(response), 1)
+        self.assertEqual(response[0]['id'], 42)
+        self.assertEqual(response[0]['localizacao'], 'Endereço existente')
+        self.assertEqual(response[0]['imagem_url'], '/assets/quadras/miguel-vieira.jpg')
 
     def test_admin_permissions_and_reservations(self):
         user = self.account('user@example.com')

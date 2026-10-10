@@ -1,11 +1,11 @@
 [
-  {"nome":"Centro Esportivo Miguel Vieira","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":null},
-  {"nome":"Centro Poliesportivo — Campo do Alemão","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":null},
+  {"nome":"Centro Esportivo Miguel Vieira","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":"/assets/quadras/miguel-vieira.jpg"},
+  {"nome":"Centro Poliesportivo — Campo do Alemão","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":"/assets/quadras/campo-alemao.jpg"},
   {"nome":"Quadra Esportiva do CDHU","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":"/assets/quadras/cdhu.jpg"},
   {"nome":"Praça Francisco de Assis Galvão (Raspadão) - Areia","localizacao":"Potim/SP","tipo":"Areia","imagem_url":"/assets/quadras/raspadao-areia.jpg"},
   {"nome":"Praça Francisco de Assis Galvão (Raspadão) - Futsal","localizacao":"Potim/SP","tipo":"Futsal","imagem_url":"/assets/quadras/raspadao-futsal.jpg"},
-  {"nome":"Escola Municipal Amador Galvão César","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":null},
-  {"nome":"Escola Municipal Geraldo Alckmin","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":null},
+  {"nome":"Escola Municipal Amador Galvão César","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":"/assets/quadras/escola-amador.jpg"},
+  {"nome":"Escola Municipal Geraldo Alckmin","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":"/assets/quadras/geraldo-alckmin.jpg"},
   {"nome":"Escola Municipal Judith Weber","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":"/assets/quadras/escola-judith.jpg"},
   {"nome":"Escola Dito Carita","localizacao":"Potim/SP","tipo":"A confirmar","imagem_url":"/assets/quadras/escola-dito-carita.jpg"}
 ]
