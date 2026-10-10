@@ -6,12 +6,12 @@
     <title>Portal do Cidadão - Quadra Democrática Potim</title>
     <link rel="stylesheet" href="/assets/style.css">
 </head>
-<body>
+<body class="painel-municipal pagina-acesso">
     
     <!-- BARRA DE ACESSIBILIDADE GOVERNAMENTAL -->
     <div class="barra-acessibilidade">
         <div class="conteudo-acessibilidade">
-            <span>PJ II - Potim/SP</span>
+            <span>Quadra Democrática - Projeto Integrador II</span>
             <div class="botoes-acessibilidade">
                 <button type="button" id="btn-aumentar-fonte" aria-label="Aumentar tamanho do texto">A+</button>
                 <button type="button" id="btn-diminuir-fonte" aria-label="Diminuir tamanho do texto">A-</button>
@@ -20,10 +20,14 @@
         </div>
     </div>
 
-    <main class="container">
+    <main class="acesso-container">
+        <div class="banner-municipal">
+            <img src="/assets/branding/banner-potim.png" width="2804" height="561" alt="Quadra Democrática — Agende quadras públicas com facilidade. Prefeitura de Potim, SP." fetchpriority="high">
+        </div>
+        <div class="acesso-cartao">
         <header>
-            <h1>PROJETO QUADRA DEMOCRÁTICA</h1>
-            <p>Agendamento de Espaços Públicos</p>
+            <h1>Seu próximo jogo começa aqui</h1>
+            <p>Acesse sua conta para reservar os espaços esportivos de Potim.</p>
         </header>
 
         <div id="mensagem-status" aria-live="polite" class="status-escondido"></div>
@@ -33,11 +37,11 @@
             <form id="form-login">
                 <div class="grupo-input">
                     <label for="login-email">E-mail do Usuário</label>
-                    <input type="email" id="login-email" name="username" required aria-required="true">
+                    <input type="email" id="login-email" name="username" autocomplete="username" required aria-required="true">
                 </div>
                 <div class="grupo-input">
                     <label for="login-senha">Senha</label>
-                    <input type="password" id="login-senha" name="password" required aria-required="true">
+                    <input type="password" id="login-senha" name="password" autocomplete="current-password" required aria-required="true">
                 </div>
                 <button type="submit" class="btn-primario">Entrar</button>
             </form>
@@ -49,20 +53,21 @@
             <form id="form-cadastro">
                 <div class="grupo-input">
                     <label for="cadastro-nome">Nome Completo</label>
-                    <input type="text" id="cadastro-nome" required aria-required="true">
+                    <input type="text" id="cadastro-nome" autocomplete="name" required aria-required="true">
                 </div>
                 <div class="grupo-input">
                     <label for="cadastro-email">E-mail</label>
-                    <input type="email" id="cadastro-email" required aria-required="true">
+                    <input type="email" id="cadastro-email" autocomplete="email" required aria-required="true">
                 </div>
                 <div class="grupo-input">
                     <label for="cadastro-senha">Senha</label>
-                    <input type="password" id="cadastro-senha" required aria-required="true">
+                    <input type="password" id="cadastro-senha" autocomplete="new-password" required aria-required="true">
                 </div>
                 <button type="submit" class="btn-primario">Registrar</button>
             </form>
             <p style="margin-top: 1rem; text-align: center;"><button type="button" id="btn-mostrar-login" class="btn-link">Voltar ao Login</button></p>
         </section>
+        </div>
     </main>
 
     <script src="/assets/acessibilidade.js"></script>

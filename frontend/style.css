@@ -330,3 +330,21 @@ body.alto-contraste .card-quadra img {
     .painel-municipal .linha-dupla { flex-direction: column; }
     .banner-municipal { border-radius: 6px; margin-bottom: 1.75rem; }
 }
+
+/* Login e cadastro compartilham a identidade visual do painel. */
+.acesso-container { width: calc(100% - 3rem); max-width: 1056px; margin: 2.5rem auto; }
+.acesso-container .banner-municipal { margin-bottom: 2rem; }
+.acesso-cartao { width: 100%; max-width: 480px; margin: 0 auto; padding: 2rem; border: 1px solid var(--border-color); border-radius: 16px; background: rgba(255,255,255,.94); box-shadow: 0 8px 28px rgba(7,59,112,.06); }
+.acesso-cartao header { text-align: left; border: 0; margin-bottom: 1.75rem; padding: 0; }
+.acesso-cartao header h1 { font-size: 2.1rem; text-transform: none; letter-spacing: -.02em; }
+.acesso-cartao header p { font-size: 1.05rem; line-height: 1.5; margin-top: .75rem; }
+.acesso-cartao h2 { font-size: 1.5rem; }
+.acesso-cartao label { font-weight: 600; }
+.acesso-cartao .btn-primario { text-transform: none; font-size: 1.1rem; margin-top: .25rem; }
+.acesso-cartao .btn-link { font-size: 1rem; }
+.pagina-acesso.alto-contraste .acesso-cartao { background: #000; box-shadow: none; }
+@media (max-width: 480px) {
+    .acesso-container { width: calc(100% - 2rem); margin: 1.5rem auto; }
+    .acesso-cartao { padding: 1.5rem; }
+    .acesso-cartao header h1 { font-size: 1.85rem; }
+}
