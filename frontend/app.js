@@ -1,5 +1,5 @@
 // Constante apontando para o seu backend local
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = window.location.port === '5500' ? 'http://127.0.0.1:8000' : window.location.origin;
 
 // Elementos da Interface
 const sessaoLogin = document.getElementById('sessao-login');

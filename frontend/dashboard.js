@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = window.location.port === '5500' ? 'http://127.0.0.1:8000' : window.location.origin;
 const token = localStorage.getItem('quadralivre_token');
 
 if (!token) {
@@ -15,6 +15,19 @@ const containerOcupados = document.getElementById('container-horarios-ocupados')
 const listaOcupados = document.getElementById('lista-horarios-ocupados');
 
 let agendamentosDaQuadraSelecionada = [];
+
+function escaparHTML(value) {
+    const span = document.createElement('span');
+    span.textContent = String(value);
+    return span.innerHTML.replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+}
+
+function imagemSegura(value) {
+    try {
+        const url = new URL(value);
+        return ['https:', 'http:'].includes(url.protocol) ? escaparHTML(url.href) : '';
+    } catch { return ''; }
+}
 
 function mostrarStatus(mensagem, tipo) {
     divStatus.textContent = mensagem;
@@ -60,14 +73,14 @@ function renderizarQuadras(quadras) {
         const card = document.createElement('div');
         card.className = 'card-quadra';
         
-        const imgUrl = q.imagem_url ? q.imagem_url : 'https://via.placeholder.com/400x200.png?text=Imagem+Indisponivel';
+        const imgUrl = imagemSegura(q.imagem_url);
 
         card.innerHTML = 
-            '<img src="' + imgUrl + '" alt="Foto do espaço: ' + q.nome + '">' +
+            (imgUrl ? '<img src="' + imgUrl + '" alt="Foto do espaço: ' + escaparHTML(q.nome) + '">' : '') +
             '<div class="info-quadra">' +
-                '<h3>' + q.nome + '</h3>' +
-                '<p><strong>Modalidade:</strong> ' + q.tipo + '</p>' +
-                '<p><strong>Local:</strong> ' + q.localizacao + '</p>' +
+                '<h3>' + escaparHTML(q.nome) + '</h3>' +
+                '<p><strong>Modalidade:</strong> ' + escaparHTML(q.tipo) + '</p>' +
+                '<p><strong>Local:</strong> ' + escaparHTML(q.localizacao) + '</p>' +
             '</div>';
             
         gridDiv.appendChild(card);
@@ -141,7 +154,7 @@ function gerarComprovante(quadra, data, inicio, fim) {
     divStatus.innerHTML = 
         '<div style="border: 2px dashed #0056b3; padding: 20px; margin-top: 40px; margin-bottom: 40px; background: #f8f9fa; border-radius: 8px; text-align: center;">' +
             '<h2 style="color: #0056b3; margin-bottom: 15px;">🎟️ Ticket de Reserva</h2>' +
-            '<p><strong>Espaço:</strong> ' + quadra + '</p>' +
+            '<p><strong>Espaço:</strong> ' + escaparHTML(quadra) + '</p>' +
             '<p><strong>Data:</strong> ' + dataFormatada + '</p>' +
             '<p><strong>Horário:</strong> ' + inicio + ' às ' + fim + '</p>' +
             '<p style="font-size: 0.9em; color: #555; margin-top: 15px;">Tire um print ou imprima este comprovante para apresentar no local.</p>' +

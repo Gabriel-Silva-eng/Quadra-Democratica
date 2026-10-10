@@ -1,3 +1,8 @@
+> **Fork preparado para hospedagem:** veja [DEPLOY.md](DEPLOY.md). Interface
+> e API agora rodam juntas em `http://127.0.0.1:8000`; o status da API fica em
+> `/health`. O Blueprint do Render configura PostgreSQL e uma chave JWT
+> gerada automaticamente. Gestão de quadras requer `ADMIN_EMAILS`.
+
 <div align="center">
 <pre>
   ```  
