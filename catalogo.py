@@ -22,7 +22,7 @@ def importar_catalogo_inicial(engine):
         db.commit()
 
 
-def importar_catalogo(engine):
+def importar_fotos(engine):
     importar_catalogo_inicial(engine)
     # Complementa as fotos sem recriar quadras removidas ou alterar reservas.
     versao_fotos = "potim-quatro-fotos-restantes-v2"
@@ -37,4 +37,25 @@ def importar_catalogo(engine):
                 if existente:
                     existente.imagem_url = dados["imagem_url"]
         db.add(ImportacaoCatalogo(chave=versao_fotos))
+        db.commit()
+
+
+def importar_catalogo(engine):
+    importar_fotos(engine)
+    versao = "potim-modalidades-confirmadas-v3"
+    modalidades = {
+        "Escola Municipal Amador Galvão César": "Poliesportiva",
+        "Escola Dito Carita": "Poliesportiva",
+        "Escola Municipal Judith Weber": "Poliesportiva",
+        "Praça Francisco de Assis Galvão (Raspadão) - Futsal": "Futsal",
+        "Praça Francisco de Assis Galvão (Raspadão) - Areia": "Vôlei e futevôlei",
+    }
+    with Session(engine) as db:
+        if db.get(ImportacaoCatalogo, versao):
+            return
+        for nome, tipo in modalidades.items():
+            quadra = db.query(Quadra).filter(Quadra.nome == nome).first()
+            if quadra:
+                quadra.tipo = tipo
+        db.add(ImportacaoCatalogo(chave=versao))
         db.commit()
