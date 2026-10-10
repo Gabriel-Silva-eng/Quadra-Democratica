@@ -6,7 +6,7 @@
     <title>Painel de Agendamento</title>
     <link rel="stylesheet" href="/assets/style.css">
 </head>
-<body>
+<body class="painel-municipal">
     
     <!-- BARRA DE ACESSIBILIDADE GOVERNAMENTAL -->
     <div class="barra-acessibilidade">
@@ -20,23 +20,29 @@
         </div>
     </div>
 
-    <main class="container" style="max-width: 800px;">
-        <header>
+    <main class="container painel-container">
+        <header class="painel-cabecalho">
+            <div>
             <h1>Agendamentos</h1>
             <p>Reserva de Quadras Comunitárias</p>
-            <button id="btn-sair" class="btn-link" style="color: var(--error-color); margin-top: 1rem;">Voltar ao Login</button>
+            </div>
+            <button id="btn-sair" class="btn-link">Voltar ao Login</button>
         </header>
+
+        <div class="banner-municipal">
+            <img src="/assets/branding/banner-potim.png" width="2804" height="561" alt="Quadra Democrática — Agende quadras públicas com facilidade. Prefeitura de Potim, SP." fetchpriority="high">
+        </div>
 
         <div id="mensagem-status" aria-live="polite" class="status-escondido"></div>
 
-        <section id="sessao-quadras" style="margin-bottom: 2rem; border: 1px solid var(--border-color); padding: 1rem;">
+        <section id="sessao-quadras" class="secao-quadras">
             <h2>Quadras Disponíveis</h2>
             <div id="lista-quadras">
                 Carregando dados públicos...
             </div>
         </section>
 
-        <section id="sessao-agendar" style="border: 1px solid var(--border-color); padding: 1rem;">
+        <section id="sessao-agendar" class="secao-reserva">
             <h2>Solicitação de Reserva</h2>
             <form id="form-agendamento">
                 <div class="grupo-input">
