@@ -26,6 +26,23 @@ class UsuarioResponse(UsuarioBase):
     class Config:
         from_attributes = True
 
+class RecuperarSenha(BaseModel):
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalizar_email(cls, value):
+        return str(value).lower()
+
+class RedefinirSenha(BaseModel):
+    token: str = Field(min_length=43, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+    senha: str = Field(min_length=8)
+
+    @field_validator("senha")
+    @classmethod
+    def validar_senha(cls, value):
+        return UsuarioCreate.validar_senha(value)
+
 class QuadraBase(BaseModel):
     nome: str = Field(min_length=1, max_length=120)
     localizacao: str = Field(min_length=1, max_length=300)

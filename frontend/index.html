@@ -45,6 +45,7 @@
                 </div>
                 <button type="submit" class="btn-primario">Entrar</button>
             </form>
+            <p class="link-recuperacao"><button type="button" id="btn-recuperar-senha" class="btn-link">Perdeu sua senha?</button></p>
             <p style="margin-top: 1rem; text-align: center;">Primeiro acesso? <button type="button" id="btn-mostrar-cadastro" class="btn-link">Cadastre-se</button></p>
         </section>
 
@@ -66,6 +67,20 @@
                 <button type="submit" class="btn-primario">Registrar</button>
             </form>
             <p style="margin-top: 1rem; text-align: center;"><button type="button" id="btn-mostrar-login" class="btn-link">Voltar ao Login</button></p>
+        </section>
+
+        <section id="sessao-recuperacao" class="escondido">
+            <h2>Recuperar senha</h2>
+            <p class="ajuda-recuperacao">Informe o e-mail usado no cadastro. Enviaremos um link para você escolher uma nova senha. Ele será válido por 15 minutos.</p>
+            <p id="aviso-recuperacao" role="status" class="aviso-recuperacao escondido"></p>
+            <form id="form-recuperacao">
+                <div class="grupo-input">
+                    <label for="recuperacao-email">E-mail da conta</label>
+                    <input type="email" id="recuperacao-email" autocomplete="email" required>
+                </div>
+                <button type="submit" id="btn-enviar-recuperacao" class="btn-primario" disabled>Enviar link de recuperação</button>
+            </form>
+            <p class="link-recuperacao"><button type="button" id="btn-voltar-recuperacao" class="btn-link">Voltar ao Login</button></p>
         </section>
         </div>
     </main>

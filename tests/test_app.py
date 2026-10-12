@@ -1,6 +1,8 @@
 import os
 import tempfile
 import unittest
+import hashlib
+from unittest.mock import patch
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -13,6 +15,7 @@ os.environ['APP_ENV'] = 'test'
 from fastapi.testclient import TestClient
 import main
 import models
+import recuperacao
 from database import engine
 
 
@@ -99,6 +102,96 @@ class AppTests(unittest.TestCase):
         self.assertEqual(self.client.post('/usuarios/', json={'nome': 'Teste', 'email': 'a@example.com', 'senha': 'x' * 73}).status_code, 422)
         self.assertEqual(self.client.get('/quadras/').status_code, 200)
         self.assertEqual(self.client.post('/quadras/', headers={'Authorization': 'Bearer invalid'}, json={'nome': 'X', 'tipo': 'Y', 'localizacao': 'Z'}).status_code, 401)
+
+    def mail_config(self):
+        return patch.dict(os.environ, {
+            'BREVO_API_KEY': 'test-key-not-real', 'EMAIL_FROM': 'sender@example.com',
+            'PUBLIC_BASE_URL': 'https://quadra.example.com',
+        })
+
+    def test_recovery_single_use_hash_and_session_revocation(self):
+        old_session = self.account('admin@example.com')
+        with self.mail_config(), patch('recuperacao.enviar_email') as mail:
+            known = self.client.post('/auth/recuperar-senha', json={'email': 'ADMIN@example.com'}, headers={'Host': 'attacker.example'})
+            unknown = self.client.post('/auth/recuperar-senha', json={'email': 'missing@example.com'})
+            self.assertEqual(known.status_code, 200)
+            self.assertEqual(known.json(), unknown.json())
+            self.assertEqual(mail.call_count, 1)
+            recipient, link = mail.call_args.args
+            self.assertEqual(recipient, 'admin@example.com')
+            self.assertTrue(link.startswith('https://quadra.example.com/redefinir-senha.html#token='))
+            token = link.split('#token=')[1]
+            self.assertNotIn(token, known.text)
+            with main.SessionLocal() as db:
+                row = db.query(models.RecuperacaoSenha).one()
+                self.assertEqual(row.token_hash, hashlib.sha256(token.encode()).hexdigest())
+                self.assertNotIn(token, row.token_hash)
+            body = {'token': token, 'senha': 'NovaSenha123!'}
+            self.assertEqual(self.client.post('/auth/redefinir-senha', json=body).status_code, 200)
+            self.assertEqual(self.client.post('/auth/redefinir-senha', json=body).status_code, 400)
+            self.assertEqual(self.client.post('/token', data={'username': recipient, 'password': 'Teste12345'}).status_code, 401)
+            new = self.client.post('/token', data={'username': recipient, 'password': body['senha']})
+            self.assertEqual(new.status_code, 200)
+            court = {'nome': 'Teste', 'tipo': 'Futsal', 'localizacao': 'Centro'}
+            self.assertEqual(self.client.post('/quadras/', headers=old_session, json=court).status_code, 401)
+            self.assertEqual(self.client.post('/quadras/', headers={'Authorization': 'Bearer ' + new.json()['access_token']}, json=court).status_code, 200)
+
+    def test_recovery_expiry_replacement_and_password_validation(self):
+        self.account('user@example.com')
+        with self.mail_config(), patch('recuperacao.enviar_email') as mail:
+            self.client.post('/auth/recuperar-senha', json={'email': 'user@example.com'})
+            old_token = mail.call_args.args[1].split('#token=')[1]
+            self.client.post('/auth/recuperar-senha', json={'email': 'user@example.com'})
+            token = mail.call_args.args[1].split('#token=')[1]
+            self.assertEqual(self.client.post('/auth/redefinir-senha', json={'token': old_token, 'senha': 'NovaSenha123'}).status_code, 400)
+            for password in ['curta', 'é' * 37]:
+                self.assertEqual(self.client.post('/auth/redefinir-senha', json={'token': token, 'senha': password}).status_code, 422)
+            with main.SessionLocal() as db:
+                db.query(models.RecuperacaoSenha).one().expira_em = recuperacao.agora() - timedelta(seconds=1)
+                db.commit()
+            self.assertEqual(self.client.post('/auth/redefinir-senha', json={'token': token, 'senha': 'NovaSenha123'}).status_code, 400)
+            self.assertEqual(self.client.post('/token', data={'username': 'user@example.com', 'password': 'Teste12345'}).status_code, 200)
+
+    def test_recovery_rate_limit_and_missing_config(self):
+        with patch.dict(os.environ, {'BREVO_API_KEY': '', 'EMAIL_FROM': '', 'PUBLIC_BASE_URL': ''}), patch('recuperacao.enviar_email') as mail:
+            self.assertFalse(self.client.get('/auth/recuperacao-disponivel').json()['disponivel'])
+            self.assertEqual(self.client.post('/auth/recuperar-senha', json={'email': 'missing@example.com'}).status_code, 503)
+            mail.assert_not_called()
+        with self.mail_config():
+            self.assertTrue(self.client.get('/auth/recuperacao-disponivel').json()['disponivel'])
+            for _ in range(3):
+                self.assertEqual(self.client.post('/auth/recuperar-senha', json={'email': 'missing@example.com'}).status_code, 200)
+            self.assertEqual(self.client.post('/auth/recuperar-senha', json={'email': 'missing@example.com'}).status_code, 429)
+            for i in range(6):
+                self.assertEqual(self.client.post('/auth/recuperar-senha', json={'email': f'x{i}@example.com'}).status_code, 200)
+            self.assertEqual(self.client.post('/auth/recuperar-senha', json={'email': 'another@example.com'}).status_code, 429)
+
+    def test_recovery_frontend_and_no_token_access(self):
+        response = self.client.get('/redefinir-senha.html')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['referrer-policy'], 'no-referrer')
+        self.assertEqual(response.headers['cache-control'], 'no-store')
+        self.assertIn('Perdeu sua senha?', self.client.get('/index.html').text)
+        self.assertEqual(self.client.post('/auth/redefinir-senha', json={'token': 'x' * 43, 'senha': 'NovaSenha123'}).status_code, 400)
+
+    def test_email_provider_request_and_failure_logging(self):
+        import json
+        with self.mail_config(), patch('recuperacao.urlopen') as network:
+            network.return_value.__enter__.return_value.status = 201
+            recuperacao.enviar_email('user@example.com', 'https://quadra.example.com/redefinir-senha.html#token=test')
+            request = network.call_args.args[0]
+            self.assertEqual(request.full_url, 'https://api.brevo.com/v3/smtp/email')
+            data = json.loads(request.data)
+            self.assertEqual(data['to'], [{'email': 'user@example.com'}])
+            self.assertEqual(data['sender']['email'], 'sender@example.com')
+            self.assertIn('#token=test', data['textContent'])
+        self.account('user@example.com')
+        with self.mail_config(), patch('recuperacao.enviar_email', side_effect=RuntimeError('private provider response')), self.assertLogs('recuperacao', level='ERROR') as logs:
+            response = self.client.post('/auth/recuperar-senha', json={'email': 'user@example.com'})
+            self.assertEqual(response.status_code, 200)
+            output = ' '.join(logs.output)
+            self.assertNotIn('user@example.com', output)
+            self.assertNotIn('private provider response', output)
 
 
 if __name__ == '__main__':

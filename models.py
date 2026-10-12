@@ -15,6 +15,20 @@ class Usuario(Base):
     
     agendamentos = relationship("Agendamento", back_populates="usuario")
 
+class RecuperacaoSenha(Base):
+    __tablename__ = "recuperacoes_senha"
+    token_hash = Column(String(64), primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False, index=True)
+    assinatura_senha = Column(String(64), nullable=False)
+    expira_em = Column(DateTime, nullable=False)
+    usado_em = Column(DateTime, nullable=True)
+
+class LimiteRecuperacao(Base):
+    __tablename__ = "limites_recuperacao"
+    chave = Column(String(64), primary_key=True)
+    inicio = Column(DateTime, nullable=False)
+    tentativas = Column(Integer, nullable=False)
+
 class Quadra(Base):
     __tablename__ = "quadras"
     id = Column(Integer, primary_key=True, index=True)

@@ -19,6 +19,8 @@ services:
         fromDatabase:
           name: quadra-democratica-db
           property: connectionString
+      - key: PUBLIC_BASE_URL
+        value: https://quadra-democratica.onrender.com
       - key: ADMIN_EMAILS
         sync: false
 databases:

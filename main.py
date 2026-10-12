@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 import os
 import secrets
+import hmac
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from passlib.context import CryptContext
@@ -16,6 +17,7 @@ from fastapi import Response, status, HTTPException
 
 import models
 import schemas
+from recuperacao import assinatura_senha, criar_router
 from database import engine, SessionLocal
 
 # Cria as tabelas automaticamente se não existirem
@@ -78,7 +80,7 @@ def get_usuario_atual(token: str = Depends(oauth2_scheme), db: Session = Depends
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"require": ["exp", "sub"]})
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"require": ["exp", "sub", "sv"]})
         email: str = payload.get("sub")
         if not isinstance(email, str):
             raise credentials_exception
@@ -88,12 +90,19 @@ def get_usuario_atual(token: str = Depends(oauth2_scheme), db: Session = Depends
     usuario = db.query(models.Usuario).filter(models.Usuario.email == email).first()
     if usuario is None:
         raise credentials_exception
+    if not isinstance(payload.get("sv"), str) or not hmac.compare_digest(payload["sv"], assinatura_senha(SECRET_KEY, usuario.senha_hash)):
+        raise credentials_exception
     return usuario
 
 # --- ROTAS DA API ---
 
 FRONTEND = Path(__file__).resolve().parent / "frontend"
 app.mount("/assets", StaticFiles(directory=FRONTEND), name="assets")
+app.include_router(criar_router(SECRET_KEY, pwd_context, get_db))
+
+@app.get("/redefinir-senha.html", include_in_schema=False)
+def redefinir_page():
+    return FileResponse(FRONTEND / "redefinir-senha.html", headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
 
 @app.get("/", include_in_schema=False)
 def homepage():
@@ -131,7 +140,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not usuario or not pwd_context.verify(form_data.password, usuario.senha_hash):
         raise HTTPException(status_code=401, detail="E-mail ou senha incorretos")
     
-    access_token = criar_token_acesso(data={"sub": usuario.email})
+    access_token = criar_token_acesso(data={"sub": usuario.email, "sv": assinatura_senha(SECRET_KEY, usuario.senha_hash)})
     return {"access_token": access_token, "token_type": "bearer"}
 
 # 2. Quadras

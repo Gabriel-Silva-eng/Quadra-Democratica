@@ -39,3 +39,27 @@ defina as variáveis no terminal ou na hospedagem.
 pip install --no-cache-dir -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
+
+## Recuperação de senha por e-mail
+
+O login inclui **Perdeu sua senha?**. O envio fica indisponível até configurar:
+
+- `PUBLIC_BASE_URL`: `https://quadra-democratica.onrender.com` (origem fixa HTTPS).
+- `BREVO_API_KEY`: chave de API do Brevo, guardada apenas em Environment no Render.
+- `EMAIL_FROM`: e-mail do remetente verificado na conta Brevo.
+
+Crie sua conta em https://www.brevo.com, confirme seu e-mail, adicione e verifique
+um remetente em Senders, Domains & Dedicated IPs e gere uma chave em SMTP & API
+→ API Keys (não uma chave SMTP). Faça essa configuração diretamente no provedor;
+não envie chaves no chat, não as grave no código nem no Git. O plano gratuito do
+Render bloqueia SMTP, por isso usamos a API HTTPS do Brevo. Sem domínio próprio,
+o Brevo pode substituir o domínio do remetente por brevosend.com; confira as
+regras atuais do provedor e teste a entrega, inclusive spam.
+
+Depois de salvar essas três variáveis no Render e publicar/reiniciar, solicite
+um link pela tela de login e confirme que ele chegou. Solicitações conhecidas e
+desconhecidas recebem a mesma resposta; isso não comprova entrega. Se necessário,
+verifique o painel de e-mails transacionais do Brevo. Falhas são registradas sem
+endereços, links ou segredos. O link expira em 15 minutos, é usado uma única vez,
+e cada nova solicitação invalida os links anteriores. A redefinição invalida as
+sessões antigas. Senhas e tokens em texto nunca são gravados no banco.
