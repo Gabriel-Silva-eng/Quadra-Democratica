@@ -1,3 +1,5 @@
+@import url("/assets/fonts/fonts.css");
+
 :root {
     --bg-color: #f4f6f8;
     --text-color: #333333;
@@ -276,3 +278,81 @@ body.alto-contraste .card-quadra img {
         display: none !important;
     }
 }
+
+.foto-pendente {
+    min-height: 150px;
+    display: grid;
+    place-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Identidade municipal do painel de reservas. */
+.painel-municipal { --bg-color: #fff; --text-color: #233b50; --border-color: #d8e3ea; --barra-bg: #073b70; isolation: isolate; }
+.painel-municipal, .painel-municipal * { font-family: 'Source Sans 3', 'Segoe UI', sans-serif; }
+.painel-municipal::before {
+    content: ''; position: fixed; top: 50%; left: 50%; width: min(65vw, 600px); aspect-ratio: 270 / 275; transform: translate(-50%, -50%); z-index: -1; pointer-events: none;
+    background: url('/assets/branding/banner-potim.png') 85.24% 43.7% / 1038.52% auto no-repeat;
+    opacity: .035;
+}
+.painel-municipal .conteudo-acessibilidade { max-width: 1120px; gap: 1rem; }
+.painel-municipal .painel-container { max-width: 1120px; width: calc(100% - 3rem); padding: 2rem; border: 0; background: transparent; }
+.painel-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; text-align: left; border: 0; margin-bottom: 1.5rem; padding: 0; }
+.painel-municipal h1, .painel-municipal h2, .painel-municipal h3 { font-family: 'Barlow Semi Condensed', 'Trebuchet MS', sans-serif; font-weight: 700; line-height: 1.2; }
+.painel-cabecalho h1 { font-size: 2.5rem; text-transform: none; letter-spacing: -.02em; }
+.painel-cabecalho p { font-size: 1.05rem; }
+.painel-cabecalho #btn-sair { font-size: .85rem; font-weight: 600; padding: .75rem .25rem; white-space: nowrap; }
+.painel-municipal button:focus-visible { outline: 3px solid var(--primary-color); outline-offset: 4px; }
+.banner-municipal { margin-bottom: 2.5rem; overflow: hidden; border-radius: 12px; }
+.banner-municipal img { display: block; width: 100%; height: auto; }
+.painel-municipal #mensagem-status:empty { display: none; }
+.secao-quadras { margin-bottom: 2.5rem; }
+.painel-municipal h2 { font-size: 1.8rem; color: var(--primary-color); margin-bottom: 1.25rem; }
+.painel-municipal .grid-quadras { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.painel-municipal .card-quadra { border-radius: 12px; background: rgba(255,255,255,.88); }
+.painel-municipal .card-quadra img { height: 180px; }
+.painel-municipal .card-quadra h3 { font-size: 1.4rem; }
+.painel-municipal .card-quadra p { font-size: 1rem; line-height: 1.5; }
+.secao-reserva { border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; background: rgba(255,255,255,.88); }
+.painel-municipal input, .painel-municipal select, .painel-municipal .btn-primario { border-radius: 8px; }
+.painel-municipal.alto-contraste { --bg-color: #000; --text-color: #ffff00; --primary-color: #ffff00; --border-color: #ffff00; --barra-bg: #000; }
+.painel-municipal.alto-contraste::before { display: none; }
+.painel-municipal.alto-contraste .card-quadra, .painel-municipal.alto-contraste .secao-reserva { background: #000; }
+@media (max-width: 760px) {
+    .painel-municipal .grid-quadras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .painel-municipal .painel-container { width: calc(100% - 2rem); padding: 0; margin-top: 1.5rem; }
+    .painel-municipal .conteudo-acessibilidade { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+    .painel-cabecalho { align-items: flex-start; gap: .75rem; }
+    .painel-cabecalho h1 { font-size: 2rem; }
+    .painel-cabecalho p { font-size: .95rem; }
+    .painel-municipal .grid-quadras { grid-template-columns: 1fr; }
+    .painel-municipal .linha-dupla { flex-direction: column; }
+    .banner-municipal { border-radius: 6px; margin-bottom: 1.75rem; }
+}
+
+/* Login e cadastro compartilham a identidade visual do painel. */
+.acesso-container { width: calc(100% - 3rem); max-width: 1056px; margin: 2.5rem auto; }
+.acesso-container .banner-municipal { margin-bottom: 2rem; }
+.acesso-cartao { width: 100%; max-width: 480px; margin: 0 auto; padding: 2rem; border: 1px solid var(--border-color); border-radius: 16px; background: rgba(255,255,255,.94); box-shadow: 0 8px 28px rgba(7,59,112,.06); }
+.acesso-cartao header { text-align: left; border: 0; margin-bottom: 1.75rem; padding: 0; }
+.acesso-cartao header h1 { font-size: 2.1rem; text-transform: none; letter-spacing: -.02em; }
+.acesso-cartao header p { font-size: 1.05rem; line-height: 1.5; margin-top: .75rem; }
+.acesso-cartao h2 { font-size: 1.5rem; }
+.acesso-cartao label { font-weight: 600; }
+.acesso-cartao .btn-primario { text-transform: none; font-size: 1.1rem; margin-top: .25rem; }
+.acesso-cartao .btn-link { font-size: 1rem; }
+.pagina-acesso.alto-contraste .acesso-cartao { background: #000; box-shadow: none; }
+@media (max-width: 480px) {
+    .acesso-container { width: calc(100% - 2rem); margin: 1.5rem auto; }
+    .acesso-cartao { padding: 1.5rem; }
+    .acesso-cartao header h1 { font-size: 1.85rem; }
+}
+
+.ajuda-horarios { font-size: .95rem; line-height: 1.5; margin-bottom: .75rem; }
+.linha-dupla .metade { min-width: 0; }
+
+.link-recuperacao { text-align: center; margin-top: 1rem; }
+.ajuda-recuperacao { line-height: 1.5; margin-bottom: 1.25rem; }
+.aviso-recuperacao { padding: .85rem; margin-bottom: 1.25rem; line-height: 1.5; border: 1px solid var(--border-color); border-radius: 8px; }
+.btn-primario:disabled { opacity: .6; cursor: wait; }

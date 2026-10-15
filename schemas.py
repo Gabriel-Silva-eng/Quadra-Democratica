@@ -1,23 +1,52 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, EmailStr, field_validator, model_validator
 from datetime import datetime
 
 class UsuarioBase(BaseModel):
-    nome: str
-    email: str
+    nome: str = Field(min_length=1, max_length=120)
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalizar_email(cls, value):
+        return str(value).lower()
 
 class UsuarioCreate(UsuarioBase):
-    senha: str
+    senha: str = Field(min_length=8)
+
+    @field_validator("senha")
+    @classmethod
+    def validar_senha(cls, value):
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("A senha deve ter no máximo 72 bytes.")
+        return value
 
 class UsuarioResponse(UsuarioBase):
     id: int
     class Config:
         from_attributes = True
 
+class RecuperarSenha(BaseModel):
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalizar_email(cls, value):
+        return str(value).lower()
+
+class RedefinirSenha(BaseModel):
+    token: str = Field(min_length=43, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+    senha: str = Field(min_length=8)
+
+    @field_validator("senha")
+    @classmethod
+    def validar_senha(cls, value):
+        return UsuarioCreate.validar_senha(value)
+
 class QuadraBase(BaseModel):
-    nome: str
-    localizacao: str
-    tipo: str
+    nome: str = Field(min_length=1, max_length=120)
+    localizacao: str = Field(min_length=1, max_length=300)
+    tipo: str = Field(min_length=1, max_length=80)
     imagem_url: Optional[str] = None # <-- Campo opcional na API
 
 class QuadraCreate(QuadraBase):
@@ -34,7 +63,16 @@ class AgendamentoBase(BaseModel):
     data_hora_fim: datetime
 
 class AgendamentoCreate(AgendamentoBase):
-    pass
+    @model_validator(mode="after")
+    def validar_periodo(self):
+        if self.data_hora_inicio.tzinfo or self.data_hora_fim.tzinfo:
+            raise ValueError("Use o horário local da quadra, sem fuso horário.")
+        minutos = (self.data_hora_fim - self.data_hora_inicio).total_seconds() / 60
+        if not 30 <= minutos <= 120:
+            raise ValueError("A reserva deve durar entre 30 minutos e 2 horas.")
+        if self.data_hora_inicio < datetime.now():
+            raise ValueError("A reserva deve ser no futuro.")
+        return self
 
 class AgendamentoResponse(AgendamentoBase):
     id: int

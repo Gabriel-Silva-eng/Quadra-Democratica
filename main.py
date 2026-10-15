@@ -1,20 +1,29 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
+import os
+import secrets
+import hmac
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from passlib.context import CryptContext
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
 from fastapi import Response, status, HTTPException
 
 import models
 import schemas
+from recuperacao import assinatura_senha, criar_router
 from database import engine, SessionLocal
 
 # Cria as tabelas automaticamente se não existirem
 models.Base.metadata.create_all(bind=engine)
+from catalogo import importar_catalogo
+importar_catalogo(engine)
 
 app = FastAPI(
     title="API Quadra Democrática",
@@ -25,15 +34,22 @@ app = FastAPI(
 # --- CONFIGURAÇÃO DE CORS (Crucial para o Frontend conseguir conversar com a API) ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Em produção, trocaremos isso pelo domínio do seu site
-    allow_credentials=True,
+    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # --- CONFIGURAÇÕES DE SEGURANÇA (JWT e Bcrypt) ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = "super_secreta_chave_de_teste_mude_depois"
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    if os.getenv("APP_ENV") == "production":
+        raise RuntimeError("Configure SECRET_KEY em produção.")
+    SECRET_KEY = secrets.token_urlsafe(48)
+if len(SECRET_KEY) < 32:
+    raise RuntimeError("SECRET_KEY deve ter ao menos 32 caracteres.")
+ADMIN_EMAILS = {email.strip().lower() for email in os.getenv("ADMIN_EMAILS", "").split(",") if email.strip()}
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -44,7 +60,7 @@ def get_password_hash(password: str):
 
 def criar_token_acesso(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -64,9 +80,9 @@ def get_usuario_atual(token: str = Depends(oauth2_scheme), db: Session = Depends
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"require": ["exp", "sub", "sv"]})
         email: str = payload.get("sub")
-        if email is None:
+        if not isinstance(email, str):
             raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
@@ -74,11 +90,33 @@ def get_usuario_atual(token: str = Depends(oauth2_scheme), db: Session = Depends
     usuario = db.query(models.Usuario).filter(models.Usuario.email == email).first()
     if usuario is None:
         raise credentials_exception
+    if not isinstance(payload.get("sv"), str) or not hmac.compare_digest(payload["sv"], assinatura_senha(SECRET_KEY, usuario.senha_hash)):
+        raise credentials_exception
     return usuario
 
 # --- ROTAS DA API ---
 
-@app.get("/")
+FRONTEND = Path(__file__).resolve().parent / "frontend"
+app.mount("/assets", StaticFiles(directory=FRONTEND), name="assets")
+app.include_router(criar_router(SECRET_KEY, pwd_context, get_db))
+
+@app.get("/redefinir-senha.html", include_in_schema=False)
+def redefinir_page():
+    return FileResponse(FRONTEND / "redefinir-senha.html", headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+
+@app.get("/", include_in_schema=False)
+def homepage():
+    return FileResponse(FRONTEND / "index.html")
+
+@app.get("/dashboard.html", include_in_schema=False)
+def dashboard():
+    return FileResponse(FRONTEND / "dashboard.html")
+
+@app.get("/index.html", include_in_schema=False)
+def index_page():
+    return FileResponse(FRONTEND / "index.html")
+
+@app.get("/health")
 def read_root():
     return {"status": "ok", "mensagem": "Servidor operante."}
 
@@ -98,16 +136,21 @@ def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db))
 
 @app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.email == form_data.username).first()
+    usuario = db.query(models.Usuario).filter(models.Usuario.email == form_data.username.strip().lower()).first()
     if not usuario or not pwd_context.verify(form_data.password, usuario.senha_hash):
         raise HTTPException(status_code=401, detail="E-mail ou senha incorretos")
     
-    access_token = criar_token_acesso(data={"sub": usuario.email})
+    access_token = criar_token_acesso(data={"sub": usuario.email, "sv": assinatura_senha(SECRET_KEY, usuario.senha_hash)})
     return {"access_token": access_token, "token_type": "bearer"}
 
 # 2. Quadras
+def get_administrador(usuario: models.Usuario = Depends(get_usuario_atual)):
+    if usuario.email.lower() not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Acesso restrito à administração.")
+    return usuario
+
 @app.post("/quadras/", response_model=schemas.QuadraResponse)
-def criar_quadra(quadra: schemas.QuadraCreate, db: Session = Depends(get_db), usuario_atual: models.Usuario = Depends(get_usuario_atual)):
+def criar_quadra(quadra: schemas.QuadraCreate, db: Session = Depends(get_db), usuario_atual: models.Usuario = Depends(get_administrador)):
     nova_quadra = models.Quadra(**quadra.model_dump())
     db.add(nova_quadra)
     db.commit()
@@ -130,6 +173,9 @@ def criar_agendamento(agendamento: schemas.AgendamentoCreate, db: Session = Depe
     quadra = db.query(models.Quadra).filter(models.Quadra.id == agendamento.quadra_id).first()
     if not quadra:
         raise HTTPException(status_code=404, detail="Quadra não encontrada")
+    # Serializa reservas da mesma quadra no PostgreSQL para evitar concorrência.
+    if engine.dialect.name == "postgresql":
+        db.query(models.Quadra).filter(models.Quadra.id == agendamento.quadra_id).with_for_update().first()
     
     # Lógica de negócio: Impede agendamento sobreposto (conflito de horário)
     conflito = db.query(models.Agendamento).filter(
@@ -157,7 +203,7 @@ def criar_agendamento(agendamento: schemas.AgendamentoCreate, db: Session = Depe
     return novo_agendamento
 
 @app.delete("/quadras/{quadra_id}", status_code=status.HTTP_204_NO_CONTENT)
-def excluir_quadra(quadra_id: int, db: Session = Depends(get_db)):
+def excluir_quadra(quadra_id: int, db: Session = Depends(get_db), usuario_atual: models.Usuario = Depends(get_administrador)):
     # Procura a quadra pelo ID
     quadra_query = db.query(models.Quadra).filter(models.Quadra.id == quadra_id)
     quadra = quadra_query.first()
@@ -165,6 +211,8 @@ def excluir_quadra(quadra_id: int, db: Session = Depends(get_db)):
     if not quadra:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quadra não encontrada")
         
+    if db.query(models.Agendamento).filter(models.Agendamento.quadra_id == quadra_id).first():
+        raise HTTPException(status_code=409, detail="A quadra possui reservas e não pode ser excluída.")
     # Elimina do banco e salva a alteração
     quadra_query.delete(synchronize_session=False)
     db.commit()

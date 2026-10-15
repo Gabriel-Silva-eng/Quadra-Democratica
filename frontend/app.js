@@ -1,5 +1,5 @@
 // Constante apontando para o seu backend local
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = window.location.port === '5500' ? 'http://127.0.0.1:8000' : window.location.origin;
 
 // Elementos da Interface
 const sessaoLogin = document.getElementById('sessao-login');
@@ -14,12 +14,14 @@ const divStatus = document.getElementById('mensagem-status');
 btnMostrarCadastro.addEventListener('click', () => {
     sessaoLogin.classList.add('escondido');
     sessaoCadastro.classList.remove('escondido');
+    document.getElementById('sessao-recuperacao').classList.add('escondido');
     limparStatus();
 });
 
 btnMostrarLogin.addEventListener('click', () => {
     sessaoCadastro.classList.add('escondido');
     sessaoLogin.classList.remove('escondido');
+    document.getElementById('sessao-recuperacao').classList.add('escondido');
     limparStatus();
 });
 
@@ -105,5 +107,56 @@ formLogin.addEventListener('submit', async (e) => {
         }
     } catch (error) {
         mostrarStatus('Falha na comunicação com o servidor.', 'erro');
+    }
+});
+// Recuperação: nenhuma senha ou link de redefinição é mostrado nesta tela.
+const sessaoRecuperacao = document.getElementById('sessao-recuperacao');
+const formRecuperacao = document.getElementById('form-recuperacao');
+const btnEnviarRecuperacao = document.getElementById('btn-enviar-recuperacao');
+const avisoRecuperacao = document.getElementById('aviso-recuperacao');
+let verificacaoRecuperacao = 0;
+document.getElementById('btn-voltar-recuperacao').addEventListener('click', () => btnMostrarLogin.click());
+document.getElementById('btn-recuperar-senha').addEventListener('click', async () => {
+    sessaoLogin.classList.add('escondido');
+    sessaoCadastro.classList.add('escondido');
+    sessaoRecuperacao.classList.remove('escondido');
+    limparStatus();
+    document.getElementById('recuperacao-email').value = document.getElementById('login-email').value;
+    btnEnviarRecuperacao.disabled = true;
+    avisoRecuperacao.textContent = 'Verificando disponibilidade...';
+    avisoRecuperacao.classList.remove('escondido');
+    const verificacao = ++verificacaoRecuperacao;
+    try {
+        const resposta = await fetch(`${API_URL}/auth/recuperacao-disponivel`, {cache: 'no-store'});
+        const dados = await resposta.json();
+        if (verificacao !== verificacaoRecuperacao) return;
+        if (resposta.ok && dados.disponivel) {
+            btnEnviarRecuperacao.disabled = false;
+            avisoRecuperacao.classList.add('escondido');
+        } else {
+            avisoRecuperacao.textContent = 'A recuperação por e-mail ainda está sendo configurada. Tente novamente mais tarde.';
+        }
+    } catch {
+        avisoRecuperacao.textContent = 'Não foi possível conectar ao servidor. Tente novamente.';
+    }
+});
+formRecuperacao.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    limparStatus();
+    btnEnviarRecuperacao.disabled = true;
+    btnEnviarRecuperacao.textContent = 'Enviando...';
+    try {
+        const resposta = await fetch(`${API_URL}/auth/recuperar-senha`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email: document.getElementById('recuperacao-email').value})
+        });
+        const dados = await resposta.json();
+        mostrarStatus(resposta.ok ? dados.mensagem : (typeof dados.detail === 'string' ? dados.detail : 'Confira o e-mail informado.'), resposta.ok ? 'sucesso' : 'erro');
+        if (resposta.ok) formRecuperacao.reset();
+    } catch {
+        mostrarStatus('Falha na comunicação com o servidor. Tente novamente.', 'erro');
+    } finally {
+        btnEnviarRecuperacao.disabled = false;
+        btnEnviarRecuperacao.textContent = 'Enviar link de recuperação';
     }
 });
