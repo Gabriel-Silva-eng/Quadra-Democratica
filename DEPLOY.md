@@ -2,6 +2,17 @@
 
 Interface e API são servidas pela mesma aplicação FastAPI.
 
+O projeto publicado oferece previsão diária para Potim ao selecionar a data
+da reserva. O navegador consulta a API Forecast pública do Open-Meteo e mostra
+condição, temperaturas mínima/máxima e probabilidade máxima de chuva. O limite
+da previsão é 16 dias; para datas mais distantes, não há previsão disponível.
+Nenhuma chave adicional é necessária. A previsão pode mudar e serve apenas
+como referência.
+
+Cada quadra tem uma área de comentários. A leitura é pública e publicar exige
+login. Comentários têm de 3 a 1.000 caracteres; as listagens retornam os 100
+mais recentes. O autor ou a administração pode excluir um comentário pela API.
+
 1. O Blueprint cria um PostgreSQL gratuito. Esse banco expira em 30 dias;
    exporte os dados ou migre antes disso. Não há backups no plano gratuito.
 2. Abra https://dashboard.render.com/select-repo?type=blueprint e selecione
@@ -32,6 +43,10 @@ python -m uvicorn main:app --reload
 
 Abra http://127.0.0.1:8000. Os arquivos `.env` não são carregados automaticamente;
 defina as variáveis no terminal ou na hospedagem.
+
+O navegador consulta a previsão do Open-Meteo diretamente; a conexão com a
+internet é necessária para exibi-la. Se o serviço externo estiver indisponível,
+o site mantém a reserva disponível e mostra uma mensagem informativa.
 
 ## Testes
 
