@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from database import Base
 
 class ImportacaoCatalogo(Base):
@@ -38,6 +39,17 @@ class Quadra(Base):
     imagem_url = Column(String, nullable=True) # <-- Coluna para a URL da foto
     
     agendamentos = relationship("Agendamento", back_populates="quadra")
+    comentarios = relationship("ComentarioQuadra", back_populates="quadra", cascade="all, delete-orphan")
+
+class ComentarioQuadra(Base):
+    __tablename__ = "comentarios_quadras"
+    id = Column(Integer, primary_key=True, index=True)
+    quadra_id = Column(Integer, ForeignKey("quadras.id"), nullable=False, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False, index=True)
+    texto = Column(String(1000), nullable=False)
+    criado_em = Column(DateTime, nullable=False, default=datetime.now)
+    quadra = relationship("Quadra", back_populates="comentarios")
+    usuario = relationship("Usuario")
 
 class Agendamento(Base):
     __tablename__ = "agendamentos"

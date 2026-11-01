@@ -79,3 +79,22 @@ class AgendamentoResponse(AgendamentoBase):
     usuario_id: int
     class Config:
         from_attributes = True
+
+class ComentarioCreate(BaseModel):
+    texto: str = Field(min_length=3, max_length=1000)
+
+    @field_validator("texto")
+    @classmethod
+    def normalizar_texto(cls, value):
+        value = value.strip()
+        if len(value) < 3:
+            raise ValueError("O comentário precisa ter pelo menos 3 caracteres.")
+        return value
+
+class ComentarioResponse(BaseModel):
+    id: int
+    quadra_id: int
+    usuario_id: int
+    nome_usuario: str
+    texto: str
+    criado_em: datetime

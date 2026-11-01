@@ -356,3 +356,9 @@ body.alto-contraste .card-quadra img {
 .ajuda-recuperacao { line-height: 1.5; margin-bottom: 1.25rem; }
 .aviso-recuperacao { padding: .85rem; margin-bottom: 1.25rem; line-height: 1.5; border: 1px solid var(--border-color); border-radius: 8px; }
 .btn-primario:disabled { opacity: .6; cursor: wait; }
+
+.cartao-previsao, .comentarios-quadra { margin-top: 1rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; background: rgba(255,255,255,.78); line-height: 1.5; }
+.painel-municipal.alto-contraste .cartao-previsao, .painel-municipal.alto-contraste .comentarios-quadra { background: #000; }
+.comentarios-quadra textarea { width: 100%; min-height: 90px; padding: .8rem; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); background: var(--input-bg); font: inherit; }
+.lista-comentarios { list-style: none; margin-top: .75rem; }
+.lista-comentarios li { border-top: 1px solid var(--border-color); padding: .75rem 0; }

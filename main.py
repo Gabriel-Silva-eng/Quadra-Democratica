@@ -161,6 +161,35 @@ def criar_quadra(quadra: schemas.QuadraCreate, db: Session = Depends(get_db), us
 def listar_quadras(db: Session = Depends(get_db)):
     return db.query(models.Quadra).all()
 
+@app.get("/quadras/{quadra_id}/comentarios/", response_model=List[schemas.ComentarioResponse])
+def listar_comentarios(quadra_id: int, db: Session = Depends(get_db)):
+    if not db.query(models.Quadra.id).filter(models.Quadra.id == quadra_id).first():
+        raise HTTPException(status_code=404, detail="Quadra não encontrada.")
+    comentarios = db.query(models.ComentarioQuadra).filter_by(quadra_id=quadra_id).order_by(models.ComentarioQuadra.criado_em.desc()).limit(100).all()
+    return [schemas.ComentarioResponse(id=c.id, quadra_id=c.quadra_id, usuario_id=c.usuario_id, nome_usuario=c.usuario.nome, texto=c.texto, criado_em=c.criado_em) for c in comentarios]
+
+@app.post("/quadras/{quadra_id}/comentarios/", response_model=schemas.ComentarioResponse, status_code=status.HTTP_201_CREATED)
+def criar_comentario(quadra_id: int, comentario: schemas.ComentarioCreate, db: Session = Depends(get_db), usuario: models.Usuario = Depends(get_usuario_atual)):
+    quadra = db.query(models.Quadra).filter_by(id=quadra_id).first()
+    if not quadra:
+        raise HTTPException(status_code=404, detail="Quadra não encontrada.")
+    novo = models.ComentarioQuadra(quadra_id=quadra_id, usuario_id=usuario.id, texto=comentario.texto)
+    db.add(novo)
+    db.commit()
+    db.refresh(novo)
+    return schemas.ComentarioResponse(id=novo.id, quadra_id=novo.quadra_id, usuario_id=novo.usuario_id, nome_usuario=usuario.nome, texto=novo.texto, criado_em=novo.criado_em)
+
+@app.delete("/comentarios/{comentario_id}", status_code=status.HTTP_204_NO_CONTENT)
+def excluir_comentario(comentario_id: int, db: Session = Depends(get_db), usuario: models.Usuario = Depends(get_usuario_atual)):
+    comentario = db.query(models.ComentarioQuadra).filter_by(id=comentario_id).first()
+    if not comentario:
+        raise HTTPException(status_code=404, detail="Comentário não encontrado.")
+    if comentario.usuario_id != usuario.id and usuario.email.lower() not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Você só pode excluir seus próprios comentários.")
+    db.delete(comentario)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 # 3. Agendamentos
 @app.get("/quadras/{quadra_id}/agendamentos/", response_model=List[schemas.AgendamentoResponse])
 def listar_agendamentos_quadra(quadra_id: int, db: Session = Depends(get_db)):

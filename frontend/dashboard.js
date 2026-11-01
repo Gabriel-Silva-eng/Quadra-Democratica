@@ -13,6 +13,7 @@ const formAgendamento = document.getElementById('form-agendamento');
 const divStatus = document.getElementById('mensagem-status');
 const containerOcupados = document.getElementById('container-horarios-ocupados');
 const listaOcupados = document.getElementById('lista-horarios-ocupados');
+const previsaoTempo = document.getElementById('previsao-tempo');
 
 let agendamentosDaQuadraSelecionada = [];
 
@@ -85,7 +86,61 @@ function renderizarQuadras(quadras) {
             '</div>';
             
         gridDiv.appendChild(card);
+        const comentarios = document.createElement('section');
+        comentarios.className = 'comentarios-quadra';
+        comentarios.innerHTML = '<h3>Comentários</h3><p>Carregando comentários…</p>';
+        card.appendChild(comentarios);
+        carregarComentarios(q.id, comentarios);
     });
+}
+
+async function carregarComentarios(quadraId, container) {
+    try {
+        const resposta = await fetch(API_URL + '/quadras/' + quadraId + '/comentarios/');
+        if (!resposta.ok) throw new Error();
+        const comentarios = await resposta.json();
+        container.innerHTML = '<h3>Comentários</h3>';
+        const lista = document.createElement('ul');
+        lista.className = 'lista-comentarios';
+        if (!comentarios.length) {
+            const vazio = document.createElement('li'); vazio.textContent = 'Ainda não há comentários.'; lista.appendChild(vazio);
+        }
+        comentarios.forEach(c => {
+            const item = document.createElement('li');
+            const nome = document.createElement('strong'); nome.textContent = c.nome_usuario + ': ';
+            const texto = document.createElement('span'); texto.textContent = c.texto;
+            item.append(nome, texto);
+            lista.appendChild(item);
+        });
+        container.appendChild(lista);
+        if (token) {
+            const form = document.createElement('form');
+            form.innerHTML = '<label>Deixe seu comentário<textarea maxlength="1000" minlength="3" required></textarea></label><button class="btn-primario" type="submit">Publicar comentário</button>';
+            form.addEventListener('submit', async e => {
+                e.preventDefault(); const texto = form.querySelector('textarea').value;
+                const r = await fetch(API_URL + '/quadras/' + quadraId + '/comentarios/', {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({texto})});
+                if (r.ok) carregarComentarios(quadraId, container);
+            });
+            container.appendChild(form);
+        } else {
+            const nota = document.createElement('p'); nota.textContent = 'Entre na sua conta para comentar.'; container.appendChild(nota);
+        }
+    } catch { container.innerHTML = '<h3>Comentários</h3><p>Não foi possível carregar os comentários.</p>'; }
+}
+
+const codigosTempo = {0:'Céu limpo',1:'Predominantemente limpo',2:'Parcialmente nublado',3:'Nublado',45:'Neblina',48:'Neblina',51:'Garoa leve',53:'Garoa',55:'Garoa forte',61:'Chuva leve',63:'Chuva',65:'Chuva forte',80:'Pancadas de chuva',81:'Pancadas de chuva',82:'Pancadas fortes',95:'Trovoadas'};
+async function atualizarPrevisao() {
+    const data = inputData.value;
+    if (!data) { previsaoTempo.textContent = 'Selecione uma data para consultar a previsão do tempo em Potim.'; return; }
+    previsaoTempo.textContent = 'Consultando a previsão do tempo…';
+    try {
+        const url = new URL('https://api.open-meteo.com/v1/forecast');
+        url.search = new URLSearchParams({latitude:'-22.833',longitude:'-45.255',daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',timezone:'America/Sao_Paulo',forecast_days:'16'});
+        const resposta = await fetch(url); if (!resposta.ok) throw new Error();
+        const dados = await resposta.json(); const indice = dados.daily.time.indexOf(data);
+        if (indice < 0) { previsaoTempo.textContent = 'A previsão para essa data ainda não está disponível. Consulte novamente mais perto do dia.'; return; }
+        previsaoTempo.textContent = '🌤️ Previsão em Potim: ' + (codigosTempo[dados.daily.weather_code[indice]] || 'Condição variável') + ', mínima de ' + Math.round(dados.daily.temperature_2m_min[indice]) + '°C e máxima de ' + Math.round(dados.daily.temperature_2m_max[indice]) + '°C. Chance máxima de chuva: ' + (dados.daily.precipitation_probability_max[indice] ?? '—') + '%. Fonte: Open-Meteo. Previsão sujeita a mudanças.';
+    } catch { previsaoTempo.textContent = 'Não foi possível consultar a previsão agora. Tente novamente mais tarde.'; }
 }
 
 function popularSelect(quadras) {
@@ -117,7 +172,7 @@ selectQuadra.addEventListener('change', async function(e) {
     }
 });
 
-inputData.addEventListener('change', atualizarListaOcupados);
+inputData.addEventListener('change', () => { atualizarListaOcupados(); atualizarPrevisao(); });
 
 function atualizarListaOcupados() {
     const dataSelecionada = inputData.value;
